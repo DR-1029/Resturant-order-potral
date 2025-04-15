@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Cart</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #f2f2f2, #e6e6e6);
+            color: #333;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            color: #2c3e50;
+            margin-bottom: 40px;
+        }
+
+        #cart {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .item-qty {
+            color: #555;
+            margin-top: 5px;
+        }
+
+        .item-price {
+            font-size: 1.1em;
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .remove-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .checkout, .clear {
+            display: block;
+            margin: 20px auto 0;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .checkout:hover {
+            background-color: #219150;
+        }
+
+        .clear {
+            background-color: #e67e22;
+        }
+
+        .clear:hover {
+            background-color: #d35400;
+        }
+
+        @media (max-width: 600px) {
+            .cart-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .item-price {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Your Cart</h1>
+    <div id="cart"></div>
+    <button class="clear" onclick="clearCart()">Clear All</button>
+    <button class="checkout" onclick="checkout()">Checkout</button>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function renderCart() {
+            let html = "";
+            if (cart.length === 0) {
+                html = "<p>Your cart is empty.</p>";
+            } else {
+                cart.forEach((item, i) => {
+                    html += `
+                        <div class="cart-item">
+                            <div class="item-details">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-qty">Quantity: ${item.quantity}</div>
+                            </div>
+                            <div class="item-price">₹${item.price}</div>
+                            <button class="remove-btn" onclick="removeItem(${i})">Remove</button>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById("cart").innerHTML = html;
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+        }
+
+        function clearCart() {
+            if (confirm("Are you sure you want to clear the cart?")) {
+                localStorage.removeItem('cart');
+                cart = [];
+                renderCart();
+            }
+        }
+
+        function checkout() {
+            let user_id = localStorage.getItem("user_id");
+            if (!user_id) {
+                alert("Please login first");
+                return window.location.href = "login.php";
+            }
+
+            fetch('checkout.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart, user_id })
+            })
+            .then(res => res.text())
+            .then(data => {
+                alert(data);
+                localStorage.removeItem('cart');
+                window.location.href = "order-confirmation.php";
+            });
+        }
+
+        renderCart();
+    </script>
+</body>
+</html>
